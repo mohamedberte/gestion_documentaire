@@ -1,0 +1,10 @@
+2025-03-19 17:17:27,668 - ERROR - Error DETECTED: name 'X' is not defined
+2025-03-20 16:59:02,874 - ERROR - Erreur lors de la récupération des informations : Calling Tcl from different apartment
+2025-03-20 17:09:32,996 - ERROR - Erreur lors de la récupération des informations : Calling Tcl from different apartment
+2025-03-27 15:58:37,707 - ERROR - Erreur lors de l'exportation des informations : invalid command name ".!toplevel3.!frame.!labelframe.!treeview"
+2025-03-27 15:58:38,780 - ERROR - Erreur lors de l'exportation des informations : invalid command name ".!toplevel3.!frame.!labelframe.!treeview"
+2025-03-27 15:58:39,296 - ERROR - Erreur lors de l'exportation des informations : invalid command name ".!toplevel3.!frame.!labelframe.!treeview"
+2025-03-27 15:58:41,322 - ERROR - Erreur lors de l'exportation des informations : invalid command name ".!toplevel3.!frame.!labelframe.!treeview"
+2025-03-27 15:59:04,541 - ERROR - Erreur lors de l'exportation des informations : invalid command name ".!toplevel8.!frame.!labelframe.!treeview"
+2025-03-27 15:59:05,877 - ERROR - Erreur lors de l'exportation des informations : invalid command name ".!toplevel8.!frame.!labelframe.!treeview"
+2025-03-27 15:59:06,253 - ERROR - Erreur lors de l'exportation des informations : invalid command name ".!toplevel8.!frame.!labelframe.!treeview"

@@ -1,0 +1,17 @@
+# Ignore IDE-specific files
+.idea/
+.vscode/
+
+# Ignore compiled code
+*.class
+*.jar
+
+# Ignore logs
+*.log
+
+# Ignore dependencies
+.venv/
+
+# Ignore build data
+build/
+*.spec
