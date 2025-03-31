@@ -121,17 +121,17 @@ L'interface de **Doct'Org** est conçue pour être simple et intuitive :
 ## 📧 **Support**
 
 Si vous avez des questions ou des problèmes, veuillez contacter l'équipe de support à l'adresse suivante :  
-**support@doctorg.com**
+**bertemoh@hotmail.com**
 
 ---
 
 ## 🏆 **Crédits**
 
-- Développé par **Crédit Agricole Technologies et Services**.
-- © 2025 Crédit Agricole Technologies et Services - Tous droits réservés.
+- Développé par **Mohamed BERTE**.
+- © 2025 Mohamed BERTE - Tous droits réservés.
 
 ---
 
 ## 🔒 **Mentions légales**
 
-L'utilisation de cet outil est soumise aux conditions générales d'utilisation de **Crédit Agricole Technologies et Services**. Veuillez consulter les termes avant utilisation.
+L'utilisation de cet outil est soumise aux conditions générales d'utilisation de **Mohamed BERTE**. Veuillez consulter les termes avant utilisation.
