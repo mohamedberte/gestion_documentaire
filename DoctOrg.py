@@ -250,7 +250,7 @@ class FileAnalyzerApp:
         # Label pour le copyright
         copyright_label = ttk.Label(
         self.root,
-        text="© 2025 Crédit Agricole Technologies et Services - Doct'Org. Tous droits réservés.",
+        text="© 2025 Mohamed BERTE - Doct'Org. Tous droits réservés.",
         font=("Helvetica", 8),
         bootstyle=SECONDARY,
         anchor="center"
@@ -449,6 +449,18 @@ class FileAnalyzerApp:
             for index, row in self.dataframe.iterrows():
                 self.source_tree.insert("", "end", values=list(row))
 
+            # Barre de recherche
+            search_frame = ttk.Frame(source_frame, padding=5)
+            search_frame.pack(fill=tk.X, padx=5, pady=5)
+
+            ttk.Label(search_frame, text="Rechercher:", font=("Helvetica", 10)).pack(side=tk.LEFT, padx=5)
+            self.search_var = ttk.StringVar()
+            search_entry = ttk.Entry(search_frame, textvariable=self.search_var, width=30)
+            search_entry.pack(side=tk.LEFT, padx=5)
+            search_entry.bind("<KeyRelease>", self.filter_treeview)
+
+            ttk.Button(search_frame, text="Réinitialiser", bootstyle=INFO, command=self.reset_treeview_filter).pack(side=tk.LEFT, padx=5)
+
             # Zone de droite : Répertoire de destination
             destination_frame = ttk.LabelFrame(main_frame, text="Répertoire Destination", padding=10)
             destination_frame.pack(side=RIGHT, fill=BOTH, expand=True, padx=5, pady=5)
@@ -485,6 +497,24 @@ class FileAnalyzerApp:
             ttk.Button(action_controls, text="< Annuler", bootstyle=WARNING, command=self.revert_last_move).pack(pady=5)
         else:
             Messagebox.show_warning(title="Avertissement", message="Aucune donnée à afficher.")
+
+    def filter_treeview(self, event=None):
+        """Filtre les fichiers affichés dans le Treeview en fonction du mot-clé."""
+        keyword = self.search_var.get().lower()
+        for item in self.source_tree.get_children():
+            values = self.source_tree.item(item, "values")
+            if any(keyword in str(value).lower() for value in values):
+                self.source_tree.item(item, tags=())
+            else:
+                self.source_tree.item(item, tags=("hidden",))                           
+
+        self.source_tree.tag_configure("hidden", foreground="gray")
+
+    def reset_treeview_filter(self):
+        """Réinitialise le filtre du Treeview."""
+        self.search_var.set("")
+        for item in self.source_tree.get_children():
+            self.source_tree.item(item, tags=())
     
     def browse_destination(self):
         directory = filedialog.askdirectory()
