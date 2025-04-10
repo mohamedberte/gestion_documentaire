@@ -4,8 +4,7 @@ import pandas as pd
 from datetime import datetime
 import docx
 from PyPDF2 import PdfReader
-from PIL import Image, ImageTk, ExifTags
-import openpyxl
+from PIL import Image, ImageTk
 import pptx
 import tkinter as tk
 from tkinter import filedialog
@@ -14,9 +13,10 @@ import ttkbootstrap as ttk
 from ttkbootstrap.constants import *
 from ttkbootstrap.toast import ToastNotification
 import threading
-
-
 import logging
+import matplotlib.pyplot as plt
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+from openpyxl import load_workbook
 
 # Configure logging
 LOG_FILE = "error_log.txt"
@@ -54,16 +54,22 @@ def get_file_metadata(file_path):
         return get_rar_metadata(file_path)
     else:
         return {'Author': 'Unknown'}
-
+    
 def get_docx_metadata(file_path):
-    doc = docx.Document(file_path)
-    core_properties = doc.core_properties
-    return {'Author': core_properties.author}
+    try:
+        doc = docx.Document(file_path)
+        core_properties = doc.core_properties
+        return {'Author': core_properties.author}
+    except Exception:
+        return {'Author': 'Unknown'}
 
 def get_pdf_metadata(file_path):
-    reader = PdfReader(file_path)
-    info = reader.metadata
-    return {'Author': info.author if info.author else 'Unknown'}
+    try:
+        reader = PdfReader(file_path)
+        info = reader.metadata
+        return {'Author': info.author if info.author else 'Unknown'}
+    except Exception:
+        return {'Author': 'Unknown'}
 
 def get_txt_metadata(file_path):
     return {'Author': 'Unknown'}
@@ -72,40 +78,26 @@ def get_csv_metadata(file_path):
     return {'Author': 'Unknown'}
 
 def get_image_metadata(file_path):
-    image = Image.open(file_path)
-    exif_data = image._getexif()
-    if exif_data is not None:
-        metadata = {ExifTags.TAGS.get(tag): value for tag, value in exif_data.items()}
-        return {'Author': metadata.get('Artist', 'Unknown')}
     return {'Author': 'Unknown'}
 
 def get_xlsx_metadata(file_path):
-    wb = openpyxl.load_workbook(file_path)
-    props = wb.properties
-    return {'Author': props.creator}
+    return {'Author': 'Unknown'}
 
 def get_xls_metadata(file_path):
-    '''wb = xlrd.open_workbook(file_path)
-    # author name'''
     return {'Author': 'Unknown'}
 
 def get_ppt_metadata(file_path):
-    prs = pptx.Presentation(file_path)
-    props = prs.core_properties
-    return {'Author': props.author}
+    try:
+        prs = pptx.Presentation(file_path)
+        props = prs.core_properties
+        return {'Author': props.author}
+    except Exception:
+        return {'Author': 'Unknown'}
 
 def get_zip_metadata(file_path):
-    '''with zipfile.ZipFile(file_path, 'r') as zip_ref:
-        info_list = zip_ref.infolist()
-        if info_list:
-            return {'Author': 'Unknown'}'''
     return {'Author': 'Unknown'}
 
 def get_rar_metadata(file_path):
-    '''with rarfile.RarFile(file_path, 'r') as rar_ref:
-        info_list = rar_ref.infolist()
-        if info_list:
-            return {'Author': 'Unknown'}'''
     return {'Author': 'Unknown'}
 
 def extract_file_info(self, directory, selected_extensions):
@@ -296,6 +288,13 @@ class FileAnalyzerApp:
         except Exception as e:
             logging.error(f"Erreur lors de la récupération des informations : {e}")
             self.root.after(0, self._on_extraction_complete, False)
+            toast = ToastNotification(
+                title="Erreur",
+                message=f"Erreur lors de la récupération des informations : {e}",
+                duration=5000,
+                bootstyle=DANGER
+            )
+            toast.show_toast()
         finally:
             self.root.after(0, self.enable_buttons)
 
@@ -453,6 +452,7 @@ class FileAnalyzerApp:
             search_frame = ttk.Frame(source_frame, padding=5)
             search_frame.pack(fill=tk.X, padx=5, pady=5)
 
+
             ttk.Label(search_frame, text="Rechercher:", font=("Helvetica", 10)).pack(side=tk.LEFT, padx=5)
             self.search_var = ttk.StringVar()
             search_entry = ttk.Entry(search_frame, textvariable=self.search_var, width=30)
@@ -460,6 +460,9 @@ class FileAnalyzerApp:
             search_entry.bind("<KeyRelease>", self.filter_treeview)
 
             ttk.Button(search_frame, text="Réinitialiser", bootstyle=INFO, command=self.reset_treeview_filter).pack(side=tk.LEFT, padx=5)
+
+            # Ajouter le bouton "Occupation d'espace"
+            ttk.Button(search_frame, text="Occupation d'espace", bootstyle=PRIMARY, command=self.show_space_usage_window).pack(side=tk.LEFT, padx=5)
 
             # Zone de droite : Répertoire de destination
             destination_frame = ttk.LabelFrame(main_frame, text="Répertoire Destination", padding=10)
@@ -676,6 +679,69 @@ class FileAnalyzerApp:
 
         self.source_tree.heading(col, command=lambda: self.sort_treeview(col, not reverse))
 
+    def show_space_usage_window(self):
+        """Affiche une fenêtre centrée avec l'occupation d'espace par type de fichier."""
+        if self.dataframe is None or self.dataframe.empty:
+            Messagebox.show_warning(title="Avertissement", message="Aucune donnée disponible pour afficher l'occupation d'espace.")
+            return
+
+        space_usage = self.calculate_space_usage()
+        if not space_usage:
+            Messagebox.show_warning(title="Avertissement", message="Aucune donnée disponible pour afficher l'occupation d'espace.")
+            return
+
+        space_window = tk.Toplevel(self.root)
+        space_window.title("Occupation d'espace par type de fichier")
+        space_window.geometry("400x300")
+        space_window.resizable(False, False)
+
+        x = self.root.winfo_x() + (self.root.winfo_width() // 2) - (400 // 2)
+        y = self.root.winfo_y() + (self.root.winfo_height() // 2) - (300 // 2)
+        space_window.geometry(f"+{x}+{y}")
+
+        # Ajouter un cadre pour les indicateurs
+        frame = ttk.Frame(space_window, padding=10)
+        frame.pack(fill=tk.BOTH, expand=True)
+        
+        total_space = sum(space_usage.values())
+        
+        for file_type, space in sorted(space_usage.items(), key=lambda x: x[1], reverse=True):
+            percentage = (space / total_space) * 100
+
+            ttk.Label(
+                frame,
+                text=f"{file_type.upper()} : {space:.2f} Go ({percentage:.1f}%)",
+                font=("Helvetica", 10)
+            ).pack(anchor=tk.W, padx=5)
+
+            progress = ttk.Progressbar(
+                frame,
+                orient=tk.HORIZONTAL,
+                length=300,
+                mode='determinate'
+            )
+            progress['value'] = percentage
+            progress.pack(pady=2, padx=5)
+            
+        ttk.Button(space_window, text="Fermer", bootstyle=SECONDARY, command=space_window.destroy).pack(pady=10)
+    
+    def calculate_space_usage(self):
+        """Calcule l'occupation d'espace par type de fichier en Go."""
+        if self.dataframe is None or self.dataframe.empty:
+            return {}
+
+        space_usage = {}
+        for _, row in self.dataframe.iterrows():
+            file_type = row['Type de fichier']
+            file_path = row['Chemin']
+            try:
+                file_size = os.path.getsize(file_path) / (1024 ** 3)  # Taille en Go
+                space_usage[file_type] = space_usage.get(file_type, 0) + file_size
+            except Exception as e:
+                logging.error(f"Erreur lors du calcul de la taille du fichier {file_path}: {e}")
+
+        return space_usage
+    
     def open_file_on_double_click(self, event):
         """Ouvre un fichier en double-cliquant sur une ligne du Treeview."""
         selected_item = self.source_tree.selection()
